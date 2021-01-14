@@ -1,10 +1,8 @@
 # eloquent-uuid
-An Eloquent UUID Trait to use with Laravel 5.1 - 5.4
+An Eloquent UUID Trait to use with Laravel 5.x - 9.x
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/hyperium/hyper/master/LICENSE)
 [![Total Downloads](https://poser.pugx.org/alsofronie/eloquent-uuid/downloads)](https://packagist.org/packages/alsofronie/eloquent-uuid)
-
-It **should** work with Laravel 5.0 also, but it's untested.
 
 The trait overwrites the static `boot` method and listens to the `creating`
 event. It generates a UUID (strips the dashes) and stores it in the primary
@@ -13,7 +11,7 @@ key attribute. Thus, you'll need a `CHAR(32)` primary key for your model
 
 ## Installation
 
-	composer require alsofronie/eloquent-uuid:dev-master
+	composer require alsofronie/eloquent-uuid
 
 ## Use
 
