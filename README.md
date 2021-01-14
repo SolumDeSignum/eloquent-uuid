@@ -108,3 +108,8 @@ class User extends Eloquent
 ## Running tests
 
 To run the tests, just run `composer install` and `./vendor/bin/phpunit`.
+
+## Credits
+
+- [Alex Sofronie](https://github.com/alsofronie)
+- [Oskars Germovs](https://twitter.com/faksx)

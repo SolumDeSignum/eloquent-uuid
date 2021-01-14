@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alsofronie\Uuid;
 
 use Webpatser\Uuid\Uuid;
@@ -14,20 +16,20 @@ use Webpatser\Uuid\Uuid;
 trait Uuid32ModelTrait
 {
     /*
-	 * This function is used internally by Eloquent models to test if the model has auto increment value
-	 * @returns bool Always false
-	 */
-    public function getIncrementing()
+     * This function is used internally by Eloquent models to test if the model has auto increment value
+     * @returns bool Always false
+     */
+    public function getIncrementing(): bool
     {
         return false;
     }
 
     /**
      * This function is used internally by Eloquent models to set the data type for the primary key.
-     * 
+     *
      * @return string Always string
      */
-    public function getkeyType()
+    public function getkeyType(): string
     {
         return 'string';
     }
@@ -36,18 +38,24 @@ trait Uuid32ModelTrait
      * This function overwrites the default boot static method of Eloquent models. It will hook
      * the creation event with a simple closure to insert the UUID
      */
-    public static function bootUuid32ModelTrait()
+    public static function bootUuid32ModelTrait(): void
     {
-        static::creating(function ($model) {
-            // Only generate UUID if it wasn't set by already.
-            if (!isset($model->attributes[$model->getKeyName()])) {
-                // This is necessary because on \Illuminate\Database\Eloquent\Model::performInsert
-                // will not check for $this->getIncrementing() but directly for $this->incrementing
-                $model->incrementing = false;
-                $uuidVersion = (!empty($model->uuidVersion) ? $model->uuidVersion : 4);   // defaults to 4
-                $uuid = Uuid::generate($uuidVersion);
-                $model->attributes[$model->getKeyName()] = str_replace('-', '', $uuid->string);
+        static::creating(
+            function ($model) {
+                // Only generate UUID if it wasn't set by already.
+                if (! isset($model->attributes[$model->getKeyName()])) {
+                    // This is necessary because on \Illuminate\Database\Eloquent\Model::performInsert
+                    // will not check for $this->getIncrementing() but directly for $this->incrementing
+                    $model->incrementing = false;
+                    $uuidVersion = (! empty($model->uuidVersion) ? $model->uuidVersion : 4);   // defaults to 4
+                    $uuid = Uuid::generate($uuidVersion);
+                    $model->attributes[$model->getKeyName()] = str_replace(
+                        '-',
+                        '',
+                        $uuid->string
+                    );
+                }
             }
-        }, 0);
+        );
     }
 }
