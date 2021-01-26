@@ -6,6 +6,13 @@ namespace Alsofronie\Uuid;
 
 use Webpatser\Uuid\Uuid;
 
+use function bin2hex;
+use function is_array;
+use function is_object;
+use function is_string;
+use function method_exists;
+use function property_exists;
+
 /*
  * This trait is to be used with the DB::statement('ALTER TABLE table_name ADD COLUMN id BINARY(16) PRIMARY KEY')
  * @package Alsofronie\Uuid
@@ -59,9 +66,9 @@ trait UuidBinaryModelTrait
     {
         $key = $this->getKeyName();
         return (property_exists(
-            $this,
-            'uuidOptimization'
-        ) && $this::$uuidOptimization)
+                $this,
+                'uuidOptimization'
+            ) && $this::$uuidOptimization)
             ? self::toNormal($this->attributes[$key]) : bin2hex(
                 $this->attributes[$key]
             );
@@ -88,14 +95,14 @@ trait UuidBinaryModelTrait
      * @param  array $columns  The columns to be returned (defaults to *)
      * @return mixed           The model or null
      */
-    public static function find($id, $columns = array('*'))
+    public static function find($id, array $columns = array('*'))
     {
         $key = (new static())->getKeyName();
         if (ctype_print($id)) {
             $idFinal = (property_exists(
-                static::class,
-                'uuidOptimization'
-            ) && static::$uuidOptimization)
+                    static::class,
+                    'uuidOptimization'
+                ) && static::$uuidOptimization)
                 ? self::toOptimized($id) : hex2bin($id);
 
             return static::where($key, '=', $idFinal)->first($columns);
@@ -127,31 +134,29 @@ trait UuidBinaryModelTrait
     }
 
     /**
-    * Convert the model to an array
-    * @return array An array containing all the fields of the model
-    */
+     * Convert the model to an array
+     * @return array An array containing all the fields of the model
+     */
     public function toArray(): array
     {
         $parentArray = parent::toArray();
         return $this->deepArray($parentArray);
     }
 
-    private function deepArray($array)
+    /**
+     * @param array $array
+     *
+     * @return array
+     */
+    private function deepArray(array $array): array
     {
-        $useOptimization = !empty($this::$uuidOptimization);
+        $useOptimization = ! empty($this::$uuidOptimization);
         foreach ($array as $key => $value) {
             if (is_array($value)) {
                 $array[$key] = $this->deepArray($value);
             } elseif (is_object($value) && method_exists($value, 'toArray')) {
                 $array[$key] = $value->toArray();
-            } elseif (
-                is_string($value) && mb_detect_encoding(
-                    $value,
-                    'ASCII',
-                    true
-                ) === false
-            ) {
-                // mb_detect_encoding will return false if $value is a binary type
+            } elseif (is_string($value) && ! $this->_isPrintable($value)) {
                 $array[$key] = $useOptimization ? self::toNormal($value) : bin2hex(
                     $value
                 );
@@ -193,7 +198,13 @@ trait UuidBinaryModelTrait
             bin2hex(substr($uuid, 10));
     }
 
-    public function fromJson($json, $asObject = false)
+    /**
+     * @param string $json
+     * @param false  $asObject
+     *
+     * @return mixed
+     */
+    public function fromJson(string $json, $asObject = false)
     {
         $mixed = parent::fromJson($json, $asObject);
         $key = $this->getKeyName();
@@ -204,5 +215,23 @@ trait UuidBinaryModelTrait
         }
 
         return $mixed;
+    }
+
+    /**
+     * Checks if the given string is printable.
+     * The default ctype_print() will return false if the $value contains special characters such as é,à,ç,$,£,...
+     *
+     * @return bool True if printable
+     */
+    private function _isPrintable($value): bool
+    {
+        $printable = ctype_print($value);
+        if (! $printable) {//only check if the value is not printable according to php default ctype_print function
+            $pattern = "~^[\pL\pN\s\"\~" . preg_quote(
+                    "!#$%&'()*+,-./:;<=>?@[\]^_`{|}´"
+                ) . "]+$~u";
+            $printable = preg_match($pattern, $value) !== false;
+        }
+        return $printable;
     }
 }
